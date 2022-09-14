@@ -20,7 +20,7 @@ const (
 var db []User
 
 type User struct {
-	Id       int
+	Id       int    `json:"id"`
 	Name     string `json:"name"`
 	Surname  string `json:"surname"`
 	IsAdmin  bool   `json:"isadmin"`
@@ -41,7 +41,7 @@ func validationUserData(user *User) string {
 	if len(user.Name) < minNameLen {
 		msg = "The minimum length of the name is at least 2 characters"
 	}
-	if len(user.Name) < minPasswordLen || len(user.Password) > maxPasswordLen {
+	if len(user.Password) < minPasswordLen || len(user.Password) > maxPasswordLen {
 		msg = "The password must be at least 8 characters long and no longer than 256 characters"
 	}
 	_, err := mail.ParseAddress(user.Email)

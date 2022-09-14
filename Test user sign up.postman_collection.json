@@ -1,0 +1,44 @@
+{
+	"info": {
+		"_postman_id": "cdb9fe85-bf4d-4243-bea2-e2e2ccb597df",
+		"name": "Test user sign up",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "23358352"
+	},
+	"item": [
+		{
+			"name": "Create new user",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"John\",\n    \"surname\": \"Doe\",\n    \"isadmin\": false,\n    \"email\": \"jdoe@mail.com\",\n    \"password\": \"12345678\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/users?Content-Type=aplication/json",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"users"
+					],
+					"query": [
+						{
+							"key": "Content-Type",
+							"value": "aplication/json"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
