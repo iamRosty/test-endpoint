@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"net/mail"
 
 	"github.com/gorilla/mux"
 )
@@ -35,6 +36,21 @@ func initHeaders(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 }
 
+func validationUserData(user *User) string {
+	var msg string
+	if len(user.Name) < minNameLen {
+		msg = "The minimum length of the name is at least 2 characters"
+	}
+	if len(user.Name) < minPasswordLen || len(user.Password) > maxPasswordLen {
+		msg = "The password must be at least 8 characters long and no longer than 256 characters"
+	}
+	_, err := mail.ParseAddress(user.Email)
+	if err != nil {
+		msg = "You entered the wrong email, it should be username@hostname"
+	}
+	return msg
+}
+
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	initHeaders(w)
 	log.Println("Creating new user...")
@@ -43,6 +59,13 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(400)
 		json.NewEncoder(w).Encode(Message{Message: "Provided json file is invalid"})
+		return
+	}
+	msg := validationUserData(&user)
+	if msg != "" {
+		msgInfo := Message{Message: msg}
+		w.WriteHeader(400)
+		json.NewEncoder(w).Encode(msgInfo)
 		return
 	}
 	user.Id = len(db) + 1
