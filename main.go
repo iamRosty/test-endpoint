@@ -1,5 +1,14 @@
 package main
 
+import (
+	"log"
+	"net/http"
+
+	"github.com/gorilla/mux"
+)
+
+const port string = ":8080"
+
 var db []User
 
 type User struct {
@@ -12,5 +21,10 @@ type User struct {
 }
 
 func main() {
-
+	log.Printf("Starting server at port: %s\n", port)
+	router := mux.NewRouter()
+	router.HandleFunc("users", RegisterUser).Methods("POST")
+	if err := http.ListenAndServe(port, router); err != nil {
+		log.Fatal(err)
+	}
 }
