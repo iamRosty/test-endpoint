@@ -53,7 +53,7 @@ func validationUserData(user *User) string {
 
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	initHeaders(w)
-	log.Println("Creating new user...")
+	log.Println("Trying to create a new user...")
 	var user User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
@@ -70,6 +70,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	}
 	user.Id = len(db) + 1
 	db = append(db, user)
+	log.Println("A new user was created")
 	w.WriteHeader(201)
 	json.NewEncoder(w).Encode(user)
 }
