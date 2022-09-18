@@ -36,7 +36,7 @@ func initHeaders(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 }
 
-func validationUserData(user *User) string {
+func (user *User) validationUserData() string {
 	var msg string
 	if len(user.Name) < minNameLen {
 		msg = "The minimum length of the name is at least 2 characters"
@@ -61,7 +61,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(Message{Message: "Provided json file is invalid"})
 		return
 	}
-	msg := validationUserData(&user)
+	msg := user.validationUserData()
 	if msg != "" {
 		msgInfo := Message{Message: msg}
 		w.WriteHeader(400)
