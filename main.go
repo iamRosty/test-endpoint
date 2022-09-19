@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"net/mail"
+	"test-endpoint/models"
 
 	"github.com/gorilla/mux"
 )
@@ -17,16 +18,7 @@ const (
 	usersResourcePrefix string = "/users"
 )
 
-var db []User
-
-type User struct {
-	Id       int    `json:"id"`
-	Name     string `json:"name"`
-	Surname  string `json:"surname"`
-	IsAdmin  bool   `json:"isadmin"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
+var db []models.User
 
 type Message struct {
 	Message string `json:"message"`
@@ -36,7 +28,7 @@ func initHeaders(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 }
 
-func (user *User) validationUserData() string {
+func validationUserData(user *models.User) string {
 	var msg string
 	if len(user.Name) < minNameLen {
 		msg = "The minimum length of the name is at least 2 characters"
@@ -54,14 +46,14 @@ func (user *User) validationUserData() string {
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	initHeaders(w)
 	log.Println("Trying to create a new user...")
-	var user User
+	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		w.WriteHeader(400)
 		json.NewEncoder(w).Encode(Message{Message: "Provided json file is invalid"})
 		return
 	}
-	msg := user.validationUserData()
+	msg := validationUserData(&user)
 	if msg != "" {
 		msgInfo := Message{Message: msg}
 		w.WriteHeader(400)
