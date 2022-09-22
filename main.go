@@ -1,12 +1,14 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
 	"net/mail"
 
 	"github.com/gorilla/mux"
+	_ "github.com/lib/pq"
 )
 
 const (
@@ -15,9 +17,10 @@ const (
 	maxPasswordLen      int    = 256
 	minNameLen          int    = 2
 	usersResourcePrefix string = "/users"
+	connStr             string = "user=app password=pass dbname=db sslmode=disable"
 )
 
-var db []User
+var db sql.DB
 
 type User struct {
 	Id       int    `json:"id"`
@@ -50,6 +53,13 @@ func (user *User) validationUserData() string {
 	}
 	return msg
 }
+func Create(db *sql.DB, user *User) {
+	_, err := db.Exec("insert into Users (name, surname, isadmin, email, password) values ($1, $2, $3, $4, $5)",
+		user.Name, user.Surname, user.IsAdmin, user.Email, user.Password)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	initHeaders(w)
@@ -68,13 +78,18 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(msgInfo)
 		return
 	}
-	user.Id = len(db) + 1
-	db = append(db, user)
+	Create(&db, &user)
 	log.Println("A new user was created")
 	w.WriteHeader(201)
 	json.NewEncoder(w).Encode(user)
 }
 func main() {
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
 	log.Printf("Starting server at port: %s\n", port)
 	router := mux.NewRouter()
 	router.HandleFunc(usersResourcePrefix, RegisterUser).Methods("POST")
