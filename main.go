@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/mail"
+	"time"
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
@@ -23,12 +24,12 @@ const (
 var db sql.DB
 
 type User struct {
-	Id       int    `json:"id"`
-	Name     string `json:"name"`
-	Surname  string `json:"surname"`
-	IsAdmin  bool   `json:"isadmin"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	ID        int       `json:"id"`
+	FirstName string    `json:"first_name"`
+	LastName  string    `json:"slast_name"`
+	Email     string    `json:"email"`
+	Password  string    `json:"password"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type Message struct {
@@ -41,21 +42,24 @@ func initHeaders(w http.ResponseWriter) {
 
 func (user *User) validationUserData() string {
 	var msg string
-	if len(user.Name) < minNameLen {
+	if len(user.FirstName) < minNameLen {
 		msg = "The minimum length of the name is at least 2 characters"
+		return msg
 	}
 	if len(user.Password) < minPasswordLen || len(user.Password) > maxPasswordLen {
 		msg = "The password must be at least 8 characters long and no longer than 256 characters"
+		return msg
 	}
 	_, err := mail.ParseAddress(user.Email)
 	if err != nil {
 		msg = "You entered the wrong email, it should be username@hostname"
+		return msg
 	}
 	return msg
 }
 func Create(db *sql.DB, user *User) {
-	_, err := db.Exec("insert into Users (name, surname, isadmin, email, password) values ($1, $2, $3, $4, $5)",
-		user.Name, user.Surname, user.IsAdmin, user.Email, user.Password)
+	_, err := db.Exec("insert into Users (first_name, last_name, email, password) values ($1, $2, $3, $4)",
+		user.FirstName, user.LastName, user.Email, user.Password)
 	if err != nil {
 		log.Fatal(err)
 	}
