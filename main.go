@@ -58,8 +58,9 @@ func (user *User) validationUserData() string {
 	return msg
 }
 func Create(db *sql.DB, user *User) {
-	_, err := db.Exec("insert into Users (first_name, last_name, email, password) values ($1, $2, $3, $4)",
+	_, err := db.Exec("INSERT INTO user (first_name, last_name, email, password) values ($1, $2, $3, $4) RETURN id",
 		user.FirstName, user.LastName, user.Email, user.Password)
+
 	if err != nil {
 		log.Fatal(err)
 	}
