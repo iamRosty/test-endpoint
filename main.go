@@ -21,8 +21,6 @@ const (
 	connStr             string = "user=app password=pass dbname=db sslmode=disable"
 )
 
-var db sql.DB
-
 type User struct {
 	ID        string    `json:"id"`
 	FirstName string    `json:"first_name"`
@@ -36,6 +34,10 @@ type Message struct {
 	Message string `json:"message"`
 }
 
+type DBConnect struct {
+	db *sql.DB
+}
+
 func initHeaders(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 }
@@ -46,10 +48,12 @@ func (user *User) validationUserData() string {
 		msg = "The minimum length of the name is at least 2 characters"
 		return msg
 	}
+
 	if len(user.Password) < minPasswordLen || len(user.Password) > maxPasswordLen {
 		msg = "The password must be at least 8 characters long and no longer than 256 characters"
 		return msg
 	}
+
 	_, err := mail.ParseAddress(user.Email)
 	if err != nil {
 		msg = "You entered the wrong email, it should be username@hostname"
@@ -57,16 +61,18 @@ func (user *User) validationUserData() string {
 	}
 	return msg
 }
-func Create(db *sql.DB, user *User) {
-	_, err := db.Exec("INSERT INTO user (first_name, last_name, email, password) values ($1, $2, $3, $4) RETURN id",
+
+func Create(dbc *sql.DB, user *User) error {
+	_, err := dbc.Exec("INSERT INTO users (first_name, last_name, email, password) values ($1, $2, $3, $4)",
 		user.FirstName, user.LastName, user.Email, user.Password)
 
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	return nil
 }
 
-func RegisterUser(w http.ResponseWriter, r *http.Request) {
+func (dbc DBConnect) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	initHeaders(w)
 	log.Println("Trying to create a new user...")
 	var user User
@@ -83,7 +89,13 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(msgInfo)
 		return
 	}
-	Create(&db, &user)
+
+	err = Create(dbc.db, &user)
+	if err != nil {
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(err)
+		return
+	}
 	log.Println("A new user was created")
 	w.WriteHeader(201)
 	json.NewEncoder(w).Encode(user)
@@ -94,10 +106,11 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
+	dbc := DBConnect{db: db}
 
 	log.Printf("Starting server at port: %s\n", port)
 	router := mux.NewRouter()
-	router.HandleFunc(usersResourcePrefix, RegisterUser).Methods("POST")
+	router.HandleFunc(usersResourcePrefix, dbc.RegisterUser).Methods(http.MethodPost)
 	if err := http.ListenAndServe(":"+port, router); err != nil {
 		log.Fatal(err)
 	}
