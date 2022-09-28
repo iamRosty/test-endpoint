@@ -63,7 +63,7 @@ func (user *User) validationUserData() string {
 }
 
 func Create(dbc *sql.DB, user *User) error {
-	_, err := dbc.Exec("INSERT INTO users (first_name, last_name, email, password) values ($1, $2, $3, $4)",
+	_, err := dbc.Exec(`INSERT INTO "user" (first_name, last_name, email, password) values ($1, $2, $3, $4)`,
 		user.FirstName, user.LastName, user.Email, user.Password)
 
 	if err != nil {
